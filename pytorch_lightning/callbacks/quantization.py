@@ -91,6 +91,21 @@ class QuantizationAwareTraining(Callback):
 
     .. warning:: ``QuantizationAwareTraining`` is in beta and subject to change.
 
+    The model set for quantization can appear in one of this stages:
+
+                          ( on_fit_start )                    ( on_fit_end )
+        vanilla model            -->           QuantAwareTrain     -->      quantized model
+             ^                                 ^      |
+             |                                /       |
+             |       ( resume_from_checkpoint )       v
+        entry point               ^             QAT checkpoints
+                                  \--------------------/  
+
+    The model enters the process as "vanilla model" and it is prepared for QAT training in ``on_fit_start`` hook.
+    Note that any saved checkpoint includes already collected stat fro performing Quantization conversion,
+     but not any already quantized and/ fused modules/layers.
+    The quantization is performed on the ``on_fit_end`` and so it need sto he saved extra after finished training.
+    If a user wants to continue any past training we encourage to create a Trainer with ``resume_from_checkpoint``.
 
     Args:
 
@@ -98,8 +113,7 @@ class QuantizationAwareTraining(Callback):
 
             - 'fbgemm' for server inference.
             - 'qnnpack' for mobile inference.
-            - a custom `torch.quantization.QConfig
-              <https://pytorch.org/docs/stable/torch.quantization.html#torch.quantization.QConfig>`_.
+            -  a custom `torch.quantization.QConfig <https://pytorch.org/docs/stable/torch.quantization.html#torch.quantization.QConfig>`_.
 
         observer_type: allows switching between ``MovingAverageMinMaxObserver`` as "average" (default)
             and ``HistogramObserver`` as "histogram" which is more computationally expensive.
@@ -129,7 +143,7 @@ class QuantizationAwareTraining(Callback):
         quantize_on_fit_end: perform the quantization in `on_fit_end`.
             Note that once converted, the model cannot be put in training mode again.
 
-    """
+    """  # noqa: E501
     OBSERVER_TYPES = ('histogram', 'average')
 
     def __init__(
