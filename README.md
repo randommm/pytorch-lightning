@@ -4,7 +4,7 @@
 
 
 **The lightweight PyTorch wrapper for high-performance AI research.
-Scale your models, not the boilerplate.**
+Scale your models, not the boilerplatffe.**
 
 ---
 
